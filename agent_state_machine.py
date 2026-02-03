@@ -5,6 +5,11 @@ from enum import Enum
 from typing import List, Optional
 
 
+class EvaluationResult(Enum):
+    SUFFICIENT = "SUFFICIENT"
+    INSUFFICIENT = "INSUFFICIENT"
+
+
 @dataclass
 class AgentContext:
     # The user-provided query or task description.
@@ -16,7 +21,7 @@ class AgentContext:
     # Results from executed tools.
     tool_results: List[str] = field(default_factory=list)
     # Evaluation of whether results satisfy the intent.
-    evaluation: Optional[str] = None
+    evaluation: Optional[EvaluationResult] = None
     # Number of tool execution retries attempted.
     retries: int = 0
     # Maximum number of retries before giving up.
@@ -86,7 +91,7 @@ class AgentController:
         if self.state == AgentState.EVALUATE:
             return AgentState.REFLECT
         if self.state == AgentState.REFLECT:
-            if self.context.evaluation == "sufficient":
+            if self.context.evaluation == EvaluationResult.SUFFICIENT:
                 return AgentState.GENERATE
             if self.context.retries < self.context.max_retries:
                 return AgentState.EXECUTE_TOOL
@@ -110,23 +115,26 @@ class AgentController:
     def _execute_tool(self) -> None:
         # Placeholder tool execution.
         if self.context.planned_tools:
-            tool_name = self.context.planned_tools[0]
-            self.context.tool_results.append(f"{tool_name}_result_placeholder")
+            tool_name = self.context.planned_tools.pop(0)
+            self.context.tool_results.append(self._call_tool(tool_name))
         else:
             self.context.tool_results.append("no_tool_planned")
 
     def _evaluate(self) -> None:
         # Deterministic evaluation: always sufficient for now.
-        self.context.evaluation = "sufficient"
+        self.context.evaluation = EvaluationResult.SUFFICIENT
 
     def _reflect(self) -> None:
         # Placeholder reflection: retry counter increments if insufficient.
-        if self.context.evaluation != "sufficient":
+        if self.context.evaluation == EvaluationResult.INSUFFICIENT:
             self.context.retries += 1
 
     def _generate(self) -> None:
         # Placeholder response generation.
         pass
+
+    def _call_tool(self, tool_name: str) -> str:
+        raise NotImplementedError("Tool execution is not implemented yet.")
 
 
 def run_once(user_query: str) -> AgentContext:
