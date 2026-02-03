@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
 
+from tools.registry import ToolExecutor
+
 
 class EvaluationResult(Enum):
     SUFFICIENT = "SUFFICIENT"
@@ -46,8 +48,9 @@ class AgentState(Enum):
 
 
 class AgentController:
-    def __init__(self, context: AgentContext) -> None:
+    def __init__(self, context: AgentContext, tool_executor: ToolExecutor) -> None:
         self.context = context
+        self.tool_executor = tool_executor
         self.state = AgentState.ENTRY
 
     def run(self) -> AgentContext:
@@ -134,18 +137,26 @@ class AgentController:
         pass
 
     def _call_tool(self, tool_name: str) -> str:
-        raise NotImplementedError("Tool execution is not implemented yet.")
+        result = self.tool_executor.execute(tool_name)
+        return result.output
 
 
-def run_once(user_query: str) -> AgentContext:
+def run_once(user_query: str, tool_executor: ToolExecutor) -> AgentContext:
     """Convenience runner for a single deterministic pass."""
     context = AgentContext(user_query=user_query)
-    controller = AgentController(context)
+    controller = AgentController(context, tool_executor)
     return controller.run()
 
 
 if __name__ == "__main__":
-    final_ctx = run_once("demo query")
+    from tools.registry import MockSQLTool, MockVectorSearchTool, ToolRegistry
+
+    registry = ToolRegistry()
+    registry.register(MockSQLTool())
+    registry.register(MockVectorSearchTool())
+    executor = ToolExecutor(registry)
+
+    final_ctx = run_once("demo query", executor)
     print(f"intent={final_ctx.intent}")
     print(f"planned_tools={final_ctx.planned_tools}")
     print(f"tool_results={final_ctx.tool_results}")
