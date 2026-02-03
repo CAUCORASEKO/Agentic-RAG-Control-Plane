@@ -8,14 +8,14 @@ An agentic RAG control plane is the decision-making layer that governs how an ag
 
 ## High-level Architecture
 
-![High-level architecture diagram](docs/images/diagram.png)
+![High-level architecture diagram](docs/images/Agentic-Rac.svg)
 
-*Diagram: Control plane governs planning and evaluation, while execution performs tool actions under strict validation.*
-
-The architecture separates control from execution:
-- Control plane: explicit planning, evaluation, reflection, and response generation.
-- Execution: validated tool invocation and data access with no arbitrary code execution.
-- Traceability: every decision, transition, and tool call is captured for auditability by design.
+- Client/UI provides the entry request with query and context.
+- API Gateway enforces authentication, rate limiting, and request validation.
+- Agentic RAG Control Plane orchestrates planning, control flow, and response assembly.
+- Retrieval and tool execution are separated, with tool use restricted to allowlisted actions.
+- Evaluation assesses sufficiency and faithfulness, feeding a bounded reflection loop.
+- Final response is composed and returned to the client/UI.
 
 ## Principles
 
