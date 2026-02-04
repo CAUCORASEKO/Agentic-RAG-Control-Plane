@@ -1,29 +1,97 @@
 # Agentic RAG Control Plane
 
-A minimal reference implementation for an agentic RAG control plane. The goal is clarity and explicit control: the system separates planning from execution, validates tool use, and records every step for traceability.
+A minimal reference implementation of an **agentic RAG control plane** focused on explicit control, determinism, and traceability.
+
+This project explores how to design agents where **planning, tool invocation, evaluation, and response composition are first-class architectural concerns**, rather than implicit behavior hidden inside a single LLM call.
+
+---
 
 ## What Is an Agentic RAG Control Plane?
 
-An agentic RAG control plane is the decision-making layer that governs how an agent plans, selects tools, evaluates outcomes, and produces responses. It is distinct from the execution layer that runs tools and data operations. This separation enables deterministic control over agent behavior and makes every step observable and auditable.
+An agentic RAG control plane is the **decision and governance layer** of an agentic system.
+
+It is responsible for:
+- interpreting user intent,
+- planning actions,
+- selecting and validating tools,
+- evaluating intermediate results,
+- and deciding whether to retry, adjust, or finalize a response.
+
+Crucially, it is **separate from the execution layer** that performs retrieval, database access, or external API calls.
+
+This separation enables:
+- deterministic control over agent behavior,
+- explicit safety boundaries for tool use,
+- and full observability of every decision the agent makes.
+
+---
 
 ## High-level Architecture
 
-![High-level architecture diagram](docs/images/Agentic-Rac.svg)
+The architecture is designed and maintained directly inside the repository using Draw.io integrated in VS Code.
 
-- Client/UI provides the entry request with query and context.
-- API Gateway enforces authentication, rate limiting, and request validation.
-- Agentic RAG Control Plane orchestrates planning, control flow, and response assembly.
-- Retrieval and tool execution are separated, with tool use restricted to allowlisted actions.
-- Evaluation assesses sufficiency and faithfulness, feeding a bounded reflection loop.
-- Final response is composed and returned to the client/UI.
+### Architecture design inside the repo
 
-## Principles
+![Architecture edited in VS Code](docs/images/1-architecture-drawio-vscode.png)
+
+The diagram is not a static illustration: it is versioned, editable, and treated as part of the system design.
+
+---
+
+### Agentic RAG Control Plane (core)
+
+![Agentic control plane core](docs/images/2-architecture-drawio-vscode.png)
+
+The control plane consists of explicit stages:
+
+- **Entry**  
+  Receives the user query and initial context.
+
+- **Strategy Planner**  
+  Interprets intent and determines whether tools are required.
+
+- **Tool Caller**  
+  Issues structured, validated tool requests.
+
+- **Tool Executor**  
+  Executes only allow-listed tools (no free-form SQL or side effects).
+
+- **Context Builder**  
+  Aggregates retrieved data and intermediate results.
+
+- **Evaluator**  
+  Assesses sufficiency, faithfulness, and confidence.
+
+- **Reflection Loop (bounded)**  
+  Allows controlled retries or adjustments based on evaluation results.
+
+---
+
+### Response composition and output
+
+![Response composition](docs/images/3-architecture-drawio-vscode.png)
+
+- **Response Composer**  
+  Assembles the final answer, including formatting and citations.
+
+- **Output**  
+  Returns the response together with trace information for inspection or auditing.
+
+---
+
+## Design Principles
 
 - Explicit states and deterministic transitions for agent workflows.
-- Tool requests are structured and validated before execution.
-- No free-form SQL or opaque side effects.
-- Small, testable modules with clear boundaries.
+- Clear separation between planning, evaluation, and execution.
+- Tool usage is structured, validated, and allow-listed.
+- No implicit or opaque side effects.
+- Small, testable components with well-defined responsibilities.
+- Architecture artifacts (diagrams) are treated as code.
 
-## Status
+---
 
-This is a reference implementation intended for experimentation and design validation. It is not production-ready.
+## Project Status
+
+This repository is a **reference implementation** intended for experimentation, learning, and design validation.
+
+It is not production-ready, but it provides a concrete foundation for building controlled, auditable agentic RAG systems.
